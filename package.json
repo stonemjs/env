@@ -1,0 +1,81 @@
+{
+  "name": "@stone-js/env",
+  "version": "1.0.0",
+  "description": "Fluent and simple API to deal with .env file and env variable in node.js",
+  "main": "./src/index.mjs",
+  "module": "./src/index.mjs",
+  "types": "./dist/index.d.mts",
+  "typings": "./dist/index.d.mts",
+  "repository": "git@github.com:stonemjs/env.git",
+  "author": "Mr. Stone <pierre.evens16@gmail.com>",
+  "license": "MIT",
+  "files": [
+    "/src",
+    "/dist"
+  ],
+  "keywords": [
+    "StoneJS",
+    "Dotenv",
+    "Env"
+  ],
+  "homepage": "https://github.com/stonemjs/env#readme",
+  "bugs": {
+    "url": "https://github.com/stonemjs/env/issues"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./src/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.mts",
+        "default": "./src/index.mjs"
+      }
+    }
+  },
+  "scripts": {
+    "types": "tsc",
+    "lint": "eslint src --ext mjs",
+    "lint:test": "eslint tests --ext mjs",
+    "lint:fix": "eslint --fix --ext mjs src/ tests/",
+    "build": "npm run lint && webpack --env prod && npm run types",
+    "build:dev": "npm run lint && webpack --env dev && npm run types",
+    "release": "npm run test:summary && npm run build && npm publish --access public",
+    "test": "npm run lint:test && mocha --experimental-modules --no-warnings -r tests/setup.mjs tests/*.spec.mjs tests/**/*.spec.mjs",
+    "test:html": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text npm run test",
+    "test:lcov": "cross-env NODE_ENV=test nyc --reporter=lcovonly --reporter=text npm run test",
+    "test:summary": "cross-env NODE_ENV=test nyc --reporter=text-summary npm run test",
+    "test:text": "cross-env NODE_ENV=test nyc --reporter=text npm run test"
+  },
+  "engines": {
+    "node": "^18.0.0 || >=20.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.20",
+    "@babel/eslint-parser": "^7.22.15",
+    "@babel/preset-env": "^7.22.20",
+    "@babel/register": "^7.22.15",
+    "babel-loader": "^9.1.3",
+    "babel-plugin-istanbul": "^6.1.1",
+    "chai": "^4.3.8",
+    "clean-webpack-plugin": "^4.0.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.12.1",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "sinon": "^16.0.0",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "dotenv-expand": "^10.0.0",
+    "validator": "^13.11.0"
+  }
+}
