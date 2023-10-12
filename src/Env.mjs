@@ -1,6 +1,10 @@
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
-import isEmail from 'validator/es/lib/isEmail'
+import isIP from 'validator/lib/isIP.js'
+import isURL from 'validator/lib/isURL.js'
+import isEmail from 'validator/lib/isEmail.js'
+import isBoolean from 'validator/lib/isBoolean.js'
+import isNumeric from 'validator/lib/isNumeric.js'
 import { EnvException } from "./exceptions/EnvException.mjs"
 
 export class Env {
@@ -10,8 +14,11 @@ export class Env {
   static get (key, options = null) {
     if (typeof options === 'function') {
       return this.custom(key, options)
-    } else if (!options || typeof options !== 'object') {
-      options = { default: options }
+    } else if (
+      !options ||
+      Array.isArray(options) ||
+      typeof options !== 'object') {
+      options = { default: options, optional: true }
     }
 
     switch(options.type) {
@@ -50,7 +57,7 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (!isNumeric(value)) {
+        if (value && !isNumeric(value)) {
           throw new EnvException(`Value for ${key} must be a valid number.`)
         }
 
@@ -64,7 +71,7 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (!isBoolean(value)) {
+        if (value && !isBoolean(value)) {
           throw new EnvException(`Value for ${key} must be a valid boolean.`)
         }
 
@@ -78,7 +85,7 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        value = value.split(opts.separator ?? ',').map(v => v.trim())
+        value = (value ?? '').split(opts.separator ?? ',').map(v => v.trim())
 
         if (!opts.optional && value.length === 0) {
           throw new EnvException(`Value for ${key} must be an empty array.`)
@@ -91,7 +98,19 @@ export class Env {
   }
 
   static object (key, options = null) {
-    return this.json(key, options)
+    return this.custom(
+      key,
+      (key, value, opts) => {
+        value = Object.fromEntries((value ?? '').split(opts.separator ?? ',').map(v => v.split(':').map(v => v.trim())))
+
+        if (!opts.optional && value.length === 0) {
+          throw new EnvException(`Value for ${key} must be an empty array.`)
+        }
+
+        return value.length === 0 ? opts.default : value
+      },
+      options
+    )
   }
 
   static json (key, options = null) {
@@ -100,9 +119,9 @@ export class Env {
       (key, value, opts) => {
         try {
           return JSON.parse(value)
-        } catch (_e) {
+        } catch (e) {
           if (!opts.optional) {
-            throw new EnvException(`Value for ${key} must be valid json.`)
+            throw new EnvException(`Value for ${key} must be valid json.`, e)
           }
           return opts.default
         }
@@ -112,9 +131,11 @@ export class Env {
   }
 
   static enum (key, enums = [], defaultValue = null, options = null) {
+    options = options ?? {}
     if (Array.isArray(enums)) {
       options.enums = enums
       options.default = defaultValue
+      options.optional = true
     } else if (typeof enums === 'object' && !Array.isArray(enums)) {
       options = enums
     }
@@ -122,11 +143,11 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (!opts.optional && !opts.enums.includes(value)) {
+        if (value && !opts.optional && !opts.enums.includes(value)) {
           throw new EnvException(`Value for ${key} must be one of thoses values: ${opts.enums.join(',')}`)
         }
 
-        return value.length === 0 ? opts.default : value
+        return value?.length === 0 ? opts.default : value
       },
       options
     )
@@ -136,7 +157,7 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (!isEmail(value, { require_tld: opts.tld ?? true })) {
+        if (value && !isEmail(value, { require_tld: opts.tld ?? true })) {
           throw new EnvException(`Value for ${key} must be a valid email address.`)
         }
 
@@ -150,7 +171,7 @@ export class Env {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (!isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })) {
+        if (value && !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })) {
           throw new EnvException(`Value for ${key} must be a valid url`)
         }
         
@@ -165,6 +186,7 @@ export class Env {
       key,
       (key, value, opts) => {
         if (
+          value &&
           !isIP(value, Number(opts.version ?? 4)) ||
           !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })
         ) {
@@ -179,7 +201,10 @@ export class Env {
 
   static custom (key, validator, options = null) {
     if (this.#envCache[key]) {
-      return this.#envCache[key]
+      return {
+        value: () => this.#envCache[key],
+        toString: () => this.#envCache[key],
+      }
     }
 
     const self = this
@@ -193,8 +218,14 @@ export class Env {
     
     return {
       toString () {
-        self.#envCache[key] = this.validate()
-        return self.#envCache[key]
+        return this.value()
+      },
+      value () {
+        const value = this.validate()
+        if (value !== options.default) {
+          self.#envCache[key] = this.validate()
+        }
+        return value
       },
       validate: () => validator(key, value, options),
     }
@@ -245,8 +276,11 @@ export class Env {
   }
 
   static #normalizeOptions (options) {
-    if (!options || typeof options === 'string') {
-      return { default: options ?? null }
+    if (
+      !options ||
+      Array.isArray(options) ||
+      typeof options !== 'object') {
+      return { default: options ?? null, optional: true }
     }
 
     return options
