@@ -309,7 +309,7 @@ export class Env {
       options = { default: options }
     }
 
-    options.optional = options.default !== undefined
+    options.optional ??= options.default !== undefined
     options.default ??= null
 
     return options
