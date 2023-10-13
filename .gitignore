@@ -54,12 +54,13 @@ Thumbs.db
 *.wmv
 
 # local env files
-.env
-.env.dev
-.env.prod
-.env.production
-.env.local
-.env.*.local
+# Comment for ./examples
+# .env
+# .env.dev
+# .env.prod
+# .env.production
+# .env.local
+# .env.*.local
 
 # Log files
 npm-debug.log*
