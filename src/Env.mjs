@@ -1,41 +1,38 @@
-import dotenv from 'dotenv'
-import dotenvExpand from 'dotenv-expand'
 import isIP from 'validator/lib/isIP.js'
 import isURL from 'validator/lib/isURL.js'
 import isEmail from 'validator/lib/isEmail.js'
 import isBoolean from 'validator/lib/isBoolean.js'
 import isNumeric from 'validator/lib/isNumeric.js'
-import { EnvException } from "./exceptions/EnvException.mjs"
+import { EnvException } from './exceptions/EnvException.mjs'
 
 export class Env {
   static #envCache = {}
-  static #loaded = false
-  
+
   static get (key, options) {
     if (!options) { return this.string(key, options) }
     if (typeof options === 'function') { return this.custom(key, options, null) }
 
-    switch(options.type) {
-      case 'number':
-        return this.number(key, options)
-      case 'boolean':
-        return this.boolean(key, options)
-      case 'array':
-        return this.array(key, options)
-      case 'object':
-        return this.object(key, options)
-      case 'json':
-        return this.json(key, options)
-      case 'enum':
-        return this.enum(key, options)
-      case 'email':
-        return this.email(key, options)
-      case 'host':
-        return this.host(key, options)
-      case 'url':
-        return this.url(key, options)
-      default:
-        return this.string(key, options)
+    switch (options.type) {
+    case 'number':
+      return this.number(key, options)
+    case 'boolean':
+      return this.boolean(key, options)
+    case 'array':
+      return this.array(key, options)
+    case 'object':
+      return this.object(key, options)
+    case 'json':
+      return this.json(key, options)
+    case 'enum':
+      return this.enum(key, options)
+    case 'email':
+      return this.email(key, options)
+    case 'host':
+      return this.host(key, options)
+    case 'url':
+      return this.url(key, options)
+    default:
+      return this.string(key, options)
     }
   }
 
@@ -44,14 +41,14 @@ export class Env {
       key,
       (key, value, opts) => {
         switch (opts.format) {
-          case 'url':
-            return this.url(key, opts).value()
-          case 'host':
-            return this.host(key, opts).value()
-          case 'email':
-            return this.email(key, opts).value()
-          default:
-            return value ? String(value) : opts.default
+        case 'url':
+          return this.url(key, opts)
+        case 'host':
+          return this.host(key, opts)
+        case 'email':
+          return this.email(key, opts)
+        default:
+          return value ? String(value) : opts.default
         }
       },
       options
@@ -201,7 +198,7 @@ export class Env {
         if (value && !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })) {
           throw new EnvException(`Value for ${key} must be a valid url`)
         }
-        
+
         return value ? String(value) : opts.default
       },
       options
@@ -214,12 +211,12 @@ export class Env {
       (key, value, opts) => {
         if (
           value &&
-          !isIP(value, Number(opts.version ?? 4)) ||
-          !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })
+          (!isIP(value, Number(opts.version ?? 4)) ||
+          !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true }))
         ) {
           throw new EnvException(`Value for ${key} must be a valid host (url or ip).`)
         }
-        
+
         return value ? String(value) : opts.default
       },
       options
@@ -227,14 +224,12 @@ export class Env {
   }
 
   static custom (key, validator, options) {
-    if (this.#envCache[key]) {
-      return {
-        value: () => this.#envCache[key],
-        toString: () => this.#envCache[key],
-      }
+    const cachedValue = this.#envCache[key]
+
+    if (cachedValue) {
+      return cachedValue
     }
 
-    const self = this
     const value = this.env(key)
 
     options = this.#normalizeOptions(options)
@@ -242,18 +237,14 @@ export class Env {
     if (!options.optional && this.#isEmpty(value)) {
       throw new EnvException(`Value for ${key} is required.`)
     }
-    
-    return {
-      toString () {
-        return this.value()
-      },
-      value () {
-        const validatedValue = this.validate()
-        if (validatedValue !== options.default) { self.#envCache[key] = validatedValue }
-        return validatedValue
-      },
-      validate: () => validator(key, value, options),
+
+    const validatedValue = validator(key, value, options)
+
+    if (validatedValue !== options.default) {
+      this.#envCache[key] = validatedValue
     }
+
+    return validatedValue
   }
 
   static is (env) {
@@ -274,30 +265,18 @@ export class Env {
 
   static clearCache () {
     this.#envCache = {}
-    this.#loaded = false
 
     return this
   }
 
   static env (key) {
-    this.#load()
-    return process.env[key]
+    return this.#isBrowser()
+      ? __process__.env[key]
+      : process.env[key]
   }
 
-  static #load (force = false) {
-    if (force || !this.#loaded) {
-      const result = dotenv.config({ debug: process.env.DEBUG })
-
-      if (result.error) {
-        throw new EnvException(result.error.message, result.error)
-      }
-
-      dotenvExpand.expand(result)
-
-      this.#loaded = true
-    }
-
-    return this
+  static #isBrowser () {
+    return typeof window === 'object'
   }
 
   static #normalizeOptions (options) {

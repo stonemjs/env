@@ -1,6 +1,5 @@
 const path = require('path')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
 module.exports = (env) => {
   return {
@@ -9,7 +8,6 @@ module.exports = (env) => {
     devtool: env.dev && 'inline-source-map',
     plugins: [
       new CleanWebpackPlugin(),
-      new NodePolyfillPlugin()
     ],
     output: {
       libraryTarget: 'umd',
