@@ -32,7 +32,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(),
     new webpack.DefinePlugin({
-      '__process__.env': JSON.stringify(envPublic)
+      __process__: { env: JSON.stringify(envPublic) }
     }),
     new CopyPlugin({
       patterns: [

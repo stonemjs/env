@@ -1,3 +1,6 @@
+/**
+ * Class representing an EnvException.
+ */
 export class EnvException extends Error {
   static CODE = 'ENV-500'
 
