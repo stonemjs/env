@@ -1,7 +1,7 @@
 {
   "name": "@stone-js/env",
   "version": "1.0.0",
-  "description": "Fluent and simple API to deal with .env file and env variable in node.js",
+  "description": "Fluent and simple API to deal with .env file and env variables in node.js",
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
   "types": "./dist/index.d.mts",

@@ -11,15 +11,9 @@ export class Env {
   static #envCache = {}
   static #loaded = false
   
-  static get (key, options = null) {
-    if (typeof options === 'function') {
-      return this.custom(key, options)
-    } else if (
-      !options ||
-      Array.isArray(options) ||
-      typeof options !== 'object') {
-      options = { default: options, optional: true }
-    }
+  static get (key, options) {
+    if (!options) { return this.string(key, options) }
+    if (typeof options === 'function') { return this.custom(key, options, null) }
 
     switch(options.type) {
       case 'number':
@@ -34,26 +28,37 @@ export class Env {
         return this.json(key, options)
       case 'enum':
         return this.enum(key, options)
+      case 'email':
+        return this.email(key, options)
+      case 'host':
+        return this.host(key, options)
+      case 'url':
+        return this.url(key, options)
       default:
         return this.string(key, options)
     }
   }
 
-  static string (key, options = null) {
+  static string (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
-        if (opts.format === 'url') { return this.url(key, opts) }
-        if (opts.format === 'host') { return this.host(key, opts) }
-        if (opts.format === 'email') { return this.email(key, opts) }
-
-        return value ? String(value) : opts.default
+        switch (opts.format) {
+          case 'url':
+            return this.url(key, opts).value()
+          case 'host':
+            return this.host(key, opts).value()
+          case 'email':
+            return this.email(key, opts).value()
+          default:
+            return value ? String(value) : opts.default
+        }
       },
       options
     )
   }
 
-  static number (key, options = null) {
+  static number (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -67,7 +72,7 @@ export class Env {
     )
   }
 
-  static boolean (key, options = null) {
+  static boolean (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -81,39 +86,58 @@ export class Env {
     )
   }
 
-  static array (key, options = null) {
+  static array (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
-        value = (value ?? '').split(opts.separator ?? ',').map(v => v.trim())
+        value = value
+          ? value
+            .split(opts.separator ?? ',')
+            .map(v => v.trim())
+          : null
 
-        if (!opts.optional && value.length === 0) {
-          throw new EnvException(`Value for ${key} must be an empty array.`)
+        if (!opts.optional && (!value || value.length === 0)) {
+          throw new EnvException(`Value for ${key} must not be an empty array.`)
         }
 
-        return value.length === 0 ? opts.default : value
+        return value ?? opts.default
       },
       options
     )
   }
 
-  static object (key, options = null) {
+  static object (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
-        value = Object.fromEntries((value ?? '').split(opts.separator ?? ',').map(v => v.split(':').map(v => v.trim())))
+        value = value
+          ? Object.fromEntries(
+            value
+              .split(opts.separator ?? ',')
+              .map(v => {
+                return v
+                  .split(':')
+                  .map(w => {
+                    w = w.trim()
+                    if (isNumeric(w)) { return Number(w) }
+                    if (isBoolean(w)) { return Boolean(w) }
+                    return w
+                  })
+              })
+          )
+          : null
 
-        if (!opts.optional && value.length === 0) {
-          throw new EnvException(`Value for ${key} must be an empty array.`)
+        if (!opts.optional && (!value || Object.keys(value).length === 0)) {
+          throw new EnvException(`Value for ${key} must not be an empty object.`)
         }
 
-        return value.length === 0 ? opts.default : value
+        return value ?? opts.default
       },
       options
     )
   }
 
-  static json (key, options = null) {
+  static json (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -130,30 +154,33 @@ export class Env {
     )
   }
 
-  static enum (key, enums = [], defaultValue = null, options = null) {
+  static enum (key, enums = [], defaultValue = null, options) {
     options = options ?? {}
+
     if (Array.isArray(enums)) {
       options.enums = enums
       options.default = defaultValue
       options.optional = true
-    } else if (typeof enums === 'object' && !Array.isArray(enums)) {
+    } else if (typeof enums === 'object') {
       options = enums
     }
+
+    options.enums ??= []
 
     return this.custom(
       key,
       (key, value, opts) => {
-        if (value && !opts.optional && !opts.enums.includes(value)) {
-          throw new EnvException(`Value for ${key} must be one of thoses values: ${opts.enums.join(',')}`)
+        if (!opts.optional && (!value || !opts.enums.includes(value))) {
+          throw new EnvException(`Value for ${key} must be valid enum(${opts.enums.join(',')})`)
         }
 
-        return value?.length === 0 ? opts.default : value
+        return value ?? opts.default
       },
       options
     )
   }
 
-  static email (key, options = null) {
+  static email (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -167,7 +194,7 @@ export class Env {
     )
   }
 
-  static url (key, options = null) {
+  static url (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -181,7 +208,7 @@ export class Env {
     )
   }
 
-  static host (key, options = null) {
+  static host (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
@@ -199,7 +226,7 @@ export class Env {
     )
   }
 
-  static custom (key, validator, options = null) {
+  static custom (key, validator, options) {
     if (this.#envCache[key]) {
       return {
         value: () => this.#envCache[key],
@@ -212,7 +239,7 @@ export class Env {
 
     options = this.#normalizeOptions(options)
 
-    if (!options.optional && (!value || value.trim().length === 0)) {
+    if (!options.optional && this.#isEmpty(value)) {
       throw new EnvException(`Value for ${key} is required.`)
     }
     
@@ -221,11 +248,9 @@ export class Env {
         return this.value()
       },
       value () {
-        const value = this.validate()
-        if (value !== options.default) {
-          self.#envCache[key] = this.validate()
-        }
-        return value
+        const validatedValue = this.validate()
+        if (validatedValue !== options.default) { self.#envCache[key] = validatedValue }
+        return validatedValue
       },
       validate: () => validator(key, value, options),
     }
@@ -279,10 +304,23 @@ export class Env {
     if (
       !options ||
       Array.isArray(options) ||
-      typeof options !== 'object') {
-      return { default: options ?? null, optional: true }
+      typeof options !== 'object'
+    ) {
+      options = { default: options }
     }
 
+    options.optional = options.default !== undefined
+    options.default ??= null
+
     return options
+  }
+
+  static #isEmpty (value) {
+    if (!value) { return true }
+    if (Array.isArray(value) && value.length === 0) { return true }
+    if (typeof value === 'object' && Object.keys(value).length === 0) { return true }
+    if (typeof value === 'string' && value.trim().length === 0) { return true }
+
+    return false
   }
 }

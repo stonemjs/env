@@ -6,6 +6,19 @@ console.log('APP_NAME from String API: ', `${Env.string('APP_NAME')}`)
 console.log('APP_ALIAS from Get API with default: ', Env.get('APP_ALIAS', 'StoneJS_ALIAS_A').value())
 console.log('APP_ALIAS from String API with default: ', Env.string('APP_ALIAS', 'StoneJS_ALIAS_B').value())
 
+// Get env as email
+console.log('APP_EMAIL from Get API: ', `${Env.get('APP_EMAIL', { type: 'email' })}`)
+console.log('APP_EMAIL from Email API: ', `${Env.email('APP_EMAIL')}`)
+console.log('APP_EMAIL from String format API: ', `${Env.string('APP_EMAIL', { format: 'email' })}`)
+console.log('APP_EMAIL_OLD from Get API with default: ', Env.get('APP_EMAIL_OLD', { type: 'email', default: 'default_email@stonejs.com' }).value())
+console.log('APP_EMAIL_OLD from Email API with default: ', Env.email('APP_EMAIL_OLD', 'default_email@stonejs.com').value())
+console.log('APP_EMAIL_OLD from String format API with default:: ', Env.string('APP_EMAIL_OLD', { format: 'email', default: 'default_email@stonejs.com' }).value())
+try {
+  console.log('APP_EMAIL from Email API: ', `${Env.email('APP_EMAILS')}`)
+} catch (error) {
+  console.error('APP_EMAIL from Email API Error:', error.message)
+}
+
 // Get env as number
 console.log('APP_ID from Get API: ', Env.get('APP_ID', { type: 'number' }).value())
 console.log('APP_ID from Number API: ', Env.number('APP_ID').value())
