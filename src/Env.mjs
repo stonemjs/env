@@ -37,26 +37,26 @@ export class Env {
     if (typeof options === 'function') { return this.custom(key, options, null) }
 
     switch (options.type) {
-    case 'number':
-      return this.number(key, options)
-    case 'boolean':
-      return this.boolean(key, options)
-    case 'array':
-      return this.array(key, options)
-    case 'object':
-      return this.object(key, options)
-    case 'json':
-      return this.json(key, options)
-    case 'enum':
-      return this.enum(key, options)
-    case 'email':
-      return this.email(key, options)
-    case 'host':
-      return this.host(key, options)
-    case 'url':
-      return this.url(key, options)
-    default:
-      return this.string(key, options)
+      case 'number':
+        return this.number(key, options)
+      case 'boolean':
+        return this.boolean(key, options)
+      case 'array':
+        return this.array(key, options)
+      case 'object':
+        return this.object(key, options)
+      case 'json':
+        return this.json(key, options)
+      case 'enum':
+        return this.enum(key, options)
+      case 'email':
+        return this.email(key, options)
+      case 'host':
+        return this.host(key, options)
+      case 'url':
+        return this.url(key, options)
+      default:
+        return this.string(key, options)
     }
   }
 
@@ -73,14 +73,14 @@ export class Env {
       key,
       (key, value, opts) => {
         switch (opts.format) {
-        case 'url':
-          return this.url(key, opts)
-        case 'host':
-          return this.host(key, opts)
-        case 'email':
-          return this.email(key, opts)
-        default:
-          return value ? String(value) : opts.default
+          case 'url':
+            return this.url(key, opts)
+          case 'host':
+            return this.host(key, opts)
+          case 'email':
+            return this.email(key, opts)
+          default:
+            return value ? String(value) : opts.default
         }
       },
       options

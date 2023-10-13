@@ -2,25 +2,35 @@
   "name": "@stone-js/env",
   "version": "1.0.0",
   "description": "Fluent and simple API to deal with .env file and env variables for both browser and node.js.",
+  "author": "Mr. Stone <pierre.evens16@gmail.com>",
+  "license": "MIT",
+  "repository": "git@github.com:stonemjs/env.git",
+  "homepage": "https://github.com/stonemjs/env#readme",
+  "bugs": {
+    "url": "https://github.com/stonemjs/env/issues"
+  },
+  "keywords": [
+    "StoneJS",
+    "dotenv",
+    "env",
+    "expand",
+    "environment",
+    "variables",
+    "process",
+    "process.env",
+    "webpack",
+    "plugin"
+  ],
   "main": "./src/index.mjs",
   "module": "./src/index.mjs",
   "types": "./dist/index.d.mts",
   "typings": "./dist/index.d.mts",
-  "repository": "git@github.com:stonemjs/env.git",
-  "author": "Mr. Stone <pierre.evens16@gmail.com>",
-  "license": "MIT",
   "files": [
     "/src",
     "/dist"
   ],
-  "keywords": [
-    "StoneJS",
-    "Dotenv",
-    "Env"
-  ],
-  "homepage": "https://github.com/stonemjs/env#readme",
-  "bugs": {
-    "url": "https://github.com/stonemjs/env/issues"
+  "engines": {
+    "node": "^18.0.0 || >=20.0.0"
   },
   "exports": {
     ".": {
@@ -36,9 +46,11 @@
   },
   "scripts": {
     "types": "tsc",
-    "lint": "eslint src --ext mjs",
-    "lint:test": "eslint tests --ext mjs",
-    "lint:fix": "eslint --fix --ext mjs src/ tests/",
+    "lint": "standard src",
+    "lint:test": "standard --env mocha tests",
+    "lint:fix": "standard --fix src tests",
+    "predoc": "rimraf docs",
+    "doc": "jsdoc src/index.js -d docs",
     "build": "npm run lint && webpack --env prod && npm run types",
     "build:dev": "npm run lint && webpack --env dev && npm run types",
     "release": "npm run test:summary && npm run build && npm publish --access public",
@@ -48,8 +60,8 @@
     "test:summary": "cross-env NODE_ENV=test nyc --reporter=text-summary npm run test",
     "test:text": "cross-env NODE_ENV=test nyc --reporter=text npm run test"
   },
-  "engines": {
-    "node": "^18.0.0 || >=20.0.0"
+  "dependencies": {
+    "validator": "^13.11.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.20",
@@ -61,19 +73,21 @@
     "chai": "^4.3.8",
     "clean-webpack-plugin": "^4.0.0",
     "cross-env": "^7.0.3",
-    "eslint": "^7.12.1",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.25.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0",
+    "jsdoc": "^4.0.2",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
+    "rimraf": "^5.0.5",
     "sinon": "^16.0.0",
+    "standard": "^17.1.0",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
-  "dependencies": {
-    "validator": "^13.11.0"
+  "standard": {
+    "parser": "@babel/eslint-parser",
+    "globals": [
+      "describe",
+      "it"
+    ]
   }
 }
