@@ -5,7 +5,7 @@
 ![npm](https://img.shields.io/npm/dm/@stone-js/env)
 ![Maintenance](https://img.shields.io/maintenance/yes/2023)
 
-Fluent and simple API to deal with .env file and env variables in node.js
+Fluent and simple API to deal with .env file and env variables for both browser and node.js.
 
 ## Table of Contents
 

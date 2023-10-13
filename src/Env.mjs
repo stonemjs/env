@@ -6,7 +6,7 @@ import isNumeric from 'validator/lib/isNumeric.js'
 import { EnvException } from './exceptions/EnvException.mjs'
 
 /**
- * Class representing a Env.
+ * Class representing an Env.
  * Fluent API to retrieve env variables.
  *
  * @author Mr. Stone <pierre.evens16@gmail.com>
@@ -432,13 +432,13 @@ export class Env {
    * Get system env variables.
    * For Node.js environment get variables from process.env at runtime.
    * For Browser environment get variables from .env at buildtime(Webpack plugin required).
-   * `__process__.env` Will be replace by `.env.public` value at buildtime by Webpack plugin.
+   * `process.__env__` Will be replace by `.env.public` values at buildtime by Webpack plugin.
    *
    * @return {any}
    */
   static env (key) {
     return this.#isBrowser()
-      ? __process__.env[key]
+      ? process.__env__[key]
       : process.env[key]
   }
 
