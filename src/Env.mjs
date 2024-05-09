@@ -3,13 +3,12 @@ import isURL from 'validator/lib/isURL.js'
 import isEmail from 'validator/lib/isEmail.js'
 import isBoolean from 'validator/lib/isBoolean.js'
 import isNumeric from 'validator/lib/isNumeric.js'
-import { EnvException } from './exceptions/EnvException.mjs'
 
 /**
  * Class representing an Env.
  * Fluent API to retrieve env variables.
  *
- * @author Mr. Stone <pierre.evens16@gmail.com>
+ * @author Mr. Stone <evensstone@gmail.com>
  */
 export class Env {
   static #envCache = {}
@@ -66,7 +65,7 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid string specific value(url, email, host).
+   * @throws {TypeError} Will throw an error for invalid string specific value(url, email, host).
    */
   static string (key, options) {
     return this.custom(
@@ -93,14 +92,14 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid number.
+   * @throws {TypeError} Will throw an error for invalid number.
    */
   static number (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
         if (value && !isNumeric(value)) {
-          throw new EnvException(`Value for ${key} must be a valid number.`)
+          throw new TypeError(`Value for ${key} must be a valid number.`)
         }
 
         return Number(value ?? opts.default)
@@ -115,14 +114,14 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid boolean.
+   * @throws {TypeError} Will throw an error for invalid boolean.
    */
   static boolean (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
         if (value && !isBoolean(value)) {
-          throw new EnvException(`Value for ${key} must be a valid boolean.`)
+          throw new TypeError(`Value for ${key} must be a valid boolean.`)
         }
 
         return Boolean(value ?? opts.default)
@@ -137,7 +136,7 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for empty array if not optional.
+   * @throws {TypeError} Will throw an error for empty array if not optional.
    */
   static array (key, options) {
     return this.custom(
@@ -150,7 +149,7 @@ export class Env {
           : null
 
         if (!opts.optional && (!value || value.length === 0)) {
-          throw new EnvException(`Value for ${key} must not be an empty array.`)
+          throw new TypeError(`Value for ${key} must not be an empty array.`)
         }
 
         return value ?? opts.default
@@ -165,7 +164,7 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for empty object if not optional.
+   * @throws {TypeError} Will throw an error for empty object if not optional.
    */
   static object (key, options) {
     return this.custom(
@@ -189,7 +188,7 @@ export class Env {
           : null
 
         if (!opts.optional && (!value || Object.keys(value).length === 0)) {
-          throw new EnvException(`Value for ${key} must not be an empty object.`)
+          throw new TypeError(`Value for ${key} must not be an empty object.`)
         }
 
         return value ?? opts.default
@@ -204,7 +203,7 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid json.
+   * @throws {TypeError} Will throw an error for invalid json.
    */
   static json (key, options) {
     return this.custom(
@@ -214,7 +213,7 @@ export class Env {
           return JSON.parse(value)
         } catch (e) {
           if (!opts.optional) {
-            throw new EnvException(`Value for ${key} must be valid json.`, e)
+            throw new TypeError(`Value for ${key} must be valid json.`, e)
           }
           return opts.default
         }
@@ -231,7 +230,7 @@ export class Env {
    * @param  {any}           [defaultValue=null]
    * @param  {Options}       [options=undefined]
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid enum.
+   * @throws {TypeError} Will throw an error for invalid enum.
    */
   static enum (key, enums = [], defaultValue = null, options) {
     options = options ?? {}
@@ -250,7 +249,7 @@ export class Env {
       key,
       (key, value, opts) => {
         if (!opts.optional && (!value || !opts.enums.includes(value))) {
-          throw new EnvException(`Value for ${key} must be valid enum(${opts.enums.join(',')})`)
+          throw new TypeError(`Value for ${key} must be valid enum(${opts.enums.join(',')})`)
         }
 
         return value ?? opts.default
@@ -265,14 +264,14 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid email.
+   * @throws {TypeError} Will throw an error for invalid email.
    */
   static email (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
         if (value && !isEmail(value, { require_tld: opts.tld ?? true })) {
-          throw new EnvException(`Value for ${key} must be a valid email address.`)
+          throw new TypeError(`Value for ${key} must be a valid email address.`)
         }
 
         return value ? String(value) : opts.default
@@ -287,14 +286,14 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid url.
+   * @throws {TypeError} Will throw an error for invalid url.
    */
   static url (key, options) {
     return this.custom(
       key,
       (key, value, opts) => {
         if (value && !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true })) {
-          throw new EnvException(`Value for ${key} must be a valid url`)
+          throw new TypeError(`Value for ${key} must be a valid url`)
         }
 
         return value ? String(value) : opts.default
@@ -309,7 +308,7 @@ export class Env {
    * @param  {string}      key
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for invalid host.
+   * @throws {TypeError} Will throw an error for invalid host.
    */
   static host (key, options) {
     return this.custom(
@@ -320,7 +319,7 @@ export class Env {
           (!isIP(value, Number(opts.version ?? 4)) ||
           !isURL(value, { require_tld: opts.tld ?? true, require_protocol: opts.protocol ?? true }))
         ) {
-          throw new EnvException(`Value for ${key} must be a valid host (url or ip).`)
+          throw new TypeError(`Value for ${key} must be a valid host (url or ip).`)
         }
 
         return value ? String(value) : opts.default
@@ -336,7 +335,7 @@ export class Env {
    * @param  {Function}    validator
    * @param  {Options|any} options
    * @return {any}
-   * @throws {EnvException} Will throw an error for empty value if not optional.
+   * @throws {TypeError} Will throw an error for empty value if not optional.
    */
   static custom (key, validator, options) {
     const cachedValue = this.#envCache[key]
@@ -350,7 +349,7 @@ export class Env {
     options = this.#normalizeOptions(options)
 
     if (!options.optional && this.#isEmpty(value)) {
-      throw new EnvException(`Value for ${key} is required.`)
+      throw new TypeError(`Value for ${key} is required.`)
     }
 
     const validatedValue = validator(key, value, options)

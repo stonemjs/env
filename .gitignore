@@ -79,3 +79,8 @@ pnpm-debug.log*
 
 # Index
 index.html
+
+# Examples
+examples/
+
+README_FR.md
