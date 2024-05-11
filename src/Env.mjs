@@ -1,8 +1,8 @@
-import isIP from 'validator/lib/isIP.js'
-import isURL from 'validator/lib/isURL.js'
-import isEmail from 'validator/lib/isEmail.js'
-import isBoolean from 'validator/lib/isBoolean.js'
-import isNumeric from 'validator/lib/isNumeric.js'
+import isIP from 'validator/es/lib/isIP'
+import isURL from 'validator/es/lib/isURL'
+import isEmail from 'validator/es/lib/isEmail'
+import isBoolean from 'validator/es/lib/isBoolean'
+import isNumeric from 'validator/es/lib/isNumeric'
 
 /**
  * Class representing an Env.
